@@ -1,0 +1,13 @@
+apiVersion: autoscaling.k8s.io/v1beta2
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-vpa
+spec:
+  selector:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind:       Deployment
+    name:       slave-leech-deployment
+  updatePolicy:
+    updateMode: "Auto"
+

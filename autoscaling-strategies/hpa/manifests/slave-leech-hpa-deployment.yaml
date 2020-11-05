@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slave-leech-hpa
+spec:
+  selector:
+    matchLabels:
+      run: slave-leech-hpa
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: slave-leech-hpa
+    spec:
+      containers:
+      - name: slave-leech
+        image: kewynakshlley/slave-leech:1.0
+        ports:
+          - containerPort: 3000
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi

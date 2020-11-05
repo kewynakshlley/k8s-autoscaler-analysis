@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slave-leech-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: slave-leech-deployment
+  template:
+    metadata:
+      labels:
+        app: slave-leech-deployment
+    spec:
+      containers:
+      - name: slave-leech
+        image: kewynakshlley/slave-leech
+        ports:
+          - containerPort: 3000
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
