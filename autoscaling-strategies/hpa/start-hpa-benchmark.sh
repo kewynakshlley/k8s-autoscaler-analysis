@@ -2,10 +2,12 @@
 
 HOST=$1
 SERVICE_TIME=100
-DURATIONS=(300 300 300 300)
+DURATION=300
 
 LOGS_DIR=logs
-LOG_SUBDIR=""
+STAGE_DIR=""
+SCENARIO_DIR=""
+SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4)
 
 # Scenario 1
 REQUEST_RATE_S1=(5 10 15 20)
@@ -20,47 +22,58 @@ REQUEST_RATE_S3=(20 15 10 5)
 REQUEST_RATE_S4=(20 5 5 20)
 
 
-REQUEST_RATE=(5 10 20 5)
-
-
 function create_dir(){
-    if [ ! -d "$LOGS_DIR" ]; then
-        mkdir "$LOGS_DIR"
+    if [ ! -d "${1}" ]; then
+        mkdir "${1}"
     fi
-    mkdir "logs/$1"
-    mkdir "logs/${1}/node"
-    mkdir "logs/${1}/hpa"
-    mkdir "logs/${1}/events"
+    mkdir "${1}/node"
+    mkdir "${1}/hpa"
+    mkdir "${1}/events"
 }
 
-function cpu_usage_requests(){
-    printf "\U1F984 Saving horizontal pod autoscaler..\n"
-    printf "\U1F984 Saving information about node usage..\n"
-    echo "It will take 5 minutes.."
+function save_logs(){
     for value in {1..30}
     do
-        (kubectl get hpa my-hpa) > "logs/${LOG_SUBDIR}/hpa/hpa=${value}-$(date +%r).log"
+        (kubectl get hpa my-hpa) >> "${SCENARIO_DIR}/${STAGE_DIR}/hpa/hpa-usage.log"
 
-        (kubectl top nodes) >> "logs/${LOG_SUBDIR}/node/node-usage.log"
+        (kubectl top nodes) >> "${SCENARIO_DIR}/${STAGE_DIR}/node/node-usage.log"
         sleep 10;
     done
-    echo "Done"
 }
 
-function generate_workload(){
-    for value in {0..3}
-    do
-        LOG_SUBDIR="bench_$value"
-        create_dir $LOG_SUBDIR
+function info(){
+    printf "\U1F680 Starting scenario ${1}. It will take 20 minutes...\n"
+    printf "\U1F984 Saving HPA usage info..\n"
+    printf "\U1F984 Saving information about node usage..\n"
+}
 
-        echo "Starting benchmark with duration = ${DURATIONS[value]} and request rate = ${REQUEST_RATE_S1[value]}"
-        cpu_usage_requests &
-        (hey -z ${DURATIONS[value]}s -c ${REQUEST_RATE_S1[value]} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "logs/${LOG_SUBDIR}/hey=${value}-$(date +%r).log"
-        (kubectl describe hpa my-hpa | sed -n '18,$p') > "logs/${LOG_SUBDIR}/events/events=${value}-$(date +%r).log"
-        echo "Benchmark number $value finished."
+function start_experiment(){
+    S_AUX=1
+    for scenario in "${SCENARIOS[@]}"
+    do
+        eval SCENARIO_NAME=\( \${${scenario}[@]} \)
+        INC=1
+
+        SCENARIO_DIR="scenario-${S_AUX}"
+        mkdir $SCENARIO_DIR
+
+        info ${S_AUX}
+
+        for REQ_RATE in "${SCENARIO_NAME[@]}"
+        do
+            STAGE_DIR="stage-${INC}"
+            create_dir "${SCENARIO_DIR}/${STAGE_DIR}"
+
+            save_logs &
+            (hey -z ${DURATION}s -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey=${INC}-$(date +%r).log"
+            (kubectl describe hpa my-hpa | sed -n '18,$p') > "${SCENARIO_DIR}/${STAGE_DIR}/events/events=${INC}-$(date +%r).log"
+
+            INC=$((INC+1))
+        done
+        printf "\U1F973  Scenario finished. The logs were saved.\n"
+        S_AUX=$((S_AUX+1))
     done
     echo "Experiment finished."
 }
 
-generate_workload
-
+start_experiment

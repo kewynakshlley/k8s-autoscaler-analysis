@@ -1,2 +1,4 @@
 ./autoscaler
 **/autoscaling-strategies/vpa/autoscaler
+**/autoscaling-strategies/vpa/scenario*
+**/autoscaling-strategies/hpa/scenario*
