@@ -7,7 +7,7 @@ spec:
   targetRef:
     apiVersion: "apps/v1"
     kind:       Deployment
-    name:       slave-leech-deployment
+    name:       busy-wait-vpa
   updatePolicy:
     updateMode: "Auto"
 

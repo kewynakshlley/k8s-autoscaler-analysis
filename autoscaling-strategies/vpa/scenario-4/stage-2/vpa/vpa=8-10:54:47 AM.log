@@ -1,0 +1,12 @@
+      Lower Bound:
+        Cpu:     43m
+        Memory:  262144k
+      Target:
+        Cpu:     126m
+        Memory:  262144k
+      Uncapped Target:
+        Cpu:     126m
+        Memory:  262144k
+      Upper Bound:
+        Cpu:     26046m
+        Memory:  33772577113

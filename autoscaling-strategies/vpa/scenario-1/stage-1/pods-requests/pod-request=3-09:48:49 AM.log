@@ -1,0 +1,3 @@
+    Limits:
+      cpu:     109m
+      memory:  262144k

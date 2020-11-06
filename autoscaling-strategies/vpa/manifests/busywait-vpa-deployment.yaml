@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busy-wait-vpa
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: busy-wait-vpa
+  template:
+    metadata:
+      labels:
+        app: busy-wait-vpa
+    spec:
+      containers:
+      - name: busy-wait-vpa
+        image: kewynakshlley/slave-leech
+        ports:
+          - containerPort: 3000
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 100m
+            memory: 50Mi
