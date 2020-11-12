@@ -13,15 +13,13 @@ spec:
         run: slave-leech-hpa
     spec:
       containers:
-      - name: slave-leech
-        image: kewynakshlley/slave-leech:1.0
+      - name: slave-leech-hpa
+        image: kewynakshlley/busy-wait-noclustering
         ports:
           - containerPort: 3000
         imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: 100m
-            memory: 50Mi
           requests:
             cpu: 100m
-            memory: 50Mi

@@ -38,7 +38,7 @@ function save_logs(){
     do
         (kubectl describe pod busy-wait-vpa | sed -n '26,$p;28q') > "${SCENARIO_DIR}/${STAGE_DIR}/pods-requests/pod-request=${value}-$(date +%r).log"
 
-        (kubectl describe vpa my-vpa | tail -n 13 | sed '$d') > "${SCENARIO_DIR}/${STAGE_DIR}/vpa/vpa=${value}-$(date +%r).log"
+        (kubectl describe vpa busy-wait-vpa | tail -n 13 | sed '$d') > "${SCENARIO_DIR}/${STAGE_DIR}/vpa/vpa=${value}-$(date +%r).log"
 
         (kubectl top nodes) >> "${SCENARIO_DIR}/${STAGE_DIR}/node/node-usage.log"
         sleep 10;

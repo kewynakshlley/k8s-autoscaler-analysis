@@ -34,7 +34,7 @@ function create_dir(){
 function save_logs(){
     for value in {1..30}
     do
-        (kubectl get hpa my-hpa) >> "${SCENARIO_DIR}/${STAGE_DIR}/hpa/hpa-usage.log"
+        (kubectl get hpa slave-leech-hpa) >> "${SCENARIO_DIR}/${STAGE_DIR}/hpa/hpa-usage.log"
 
         (kubectl top nodes) >> "${SCENARIO_DIR}/${STAGE_DIR}/node/node-usage.log"
         sleep 10;
@@ -45,6 +45,7 @@ function info(){
     printf "\U1F680 Starting scenario ${1}. It will take 20 minutes...\n"
     printf "\U1F984 Saving HPA usage info..\n"
     printf "\U1F984 Saving information about node usage..\n"
+    printf "\U1F984 Saving HPA events..\n"
 }
 
 function start_experiment(){
@@ -66,7 +67,7 @@ function start_experiment(){
 
             save_logs &
             (hey -z ${DURATION}s -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey=${INC}-$(date +%r).log"
-            (kubectl describe hpa my-hpa | sed -n '18,$p') > "${SCENARIO_DIR}/${STAGE_DIR}/events/events=${INC}-$(date +%r).log"
+            (kubectl describe hpa slave-leech-hpa | sed -n '18,$p') > "${SCENARIO_DIR}/${STAGE_DIR}/events/events=${INC}-$(date +%r).log"
 
             INC=$((INC+1))
         done
