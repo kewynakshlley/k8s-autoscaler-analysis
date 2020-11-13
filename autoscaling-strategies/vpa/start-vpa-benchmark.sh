@@ -1,25 +1,22 @@
 #!/bin/bash
 
 HOST=$1
-SERVICE_TIME=100
-DURATION=300 #5 minutes
+SERVICE_TIME=250
+DURATION=2 #5 minutes
 
 LOGS_DIR=logs
 STAGE_DIR=""
 SCENARIO_DIR=""
-SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4)
+SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3)
 
 # Scenario 1
-REQUEST_RATE_S1=(5 10 15 20)
+REQUEST_RATE_S1=(2 4 8 8 4 2)
 
 # Scenario 2
-REQUEST_RATE_S2=(5 5 20 10)
+REQUEST_RATE_S2=(1 1 8 8 1 1)
 
 # Scenario 3
-REQUEST_RATE_S3=(20 15 10 5)
-
-# Scenario 4
-REQUEST_RATE_S4=(20 5 5 20)
+REQUEST_RATE_S3=(1 8 1 8 1 8)
 
 
 
@@ -30,17 +27,20 @@ function create_dir(){
     mkdir "${1}/node"
     mkdir "${1}/vpa"
     mkdir "${1}/pods-requests"
+    mkdir "${1}/pods-usage"
 }
 
 function save_logs(){
 
     for value in {1..30}
     do
-        (kubectl describe pod busy-wait-vpa | sed -n '26,$p;28q') > "${SCENARIO_DIR}/${STAGE_DIR}/pods-requests/pod-request=${value}-$(date +%r).log"
+        (kubectl get pods -o json) > "${SCENARIO_DIR}/${STAGE_DIR}/pods-requests/pod-request-${value}.log"
 
-        (kubectl describe vpa busy-wait-vpa | tail -n 13 | sed '$d') > "${SCENARIO_DIR}/${STAGE_DIR}/vpa/vpa=${value}-$(date +%r).log"
+        (kubectl get vpa busy-wait-vpa -o json) > "${SCENARIO_DIR}/${STAGE_DIR}/vpa/vpa-${value}.log"
 
         (kubectl top nodes) >> "${SCENARIO_DIR}/${STAGE_DIR}/node/node-usage.log"
+
+        (kubectl top pods) >> "${SCENARIO_DIR}/${STAGE_DIR}/pods-usage/pods-usage.log"
         sleep 10;
     done
 
@@ -51,6 +51,7 @@ function info(){
     printf "\U1F984 Saving pod requests..\n"
     printf "\U1F984 Saving vertical pod autoscaler recommendations..\n"
     printf "\U1F984 Saving information about node usage..\n"
+    printf "\U1F984 Saving information about pods usage..\n"
 }
 
 function start_experiment(){
@@ -67,11 +68,12 @@ function start_experiment(){
 
         for REQ_RATE in "${SCENARIO_NAME[@]}"
         do
+            echo "RATE LIMIT $REQ_RATE"
             STAGE_DIR="stage-${INC}"
             create_dir "${SCENARIO_DIR}/${STAGE_DIR}"
 
             save_logs &
-            (hey -z ${DURATION}s -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey=${INC}-$(date +%r).log"
+            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey=${INC}-$(date +%r).log"
             INC=$((INC+1))
         done
         printf "\U1F973  Scenario finished. The logs were saved.\n"
