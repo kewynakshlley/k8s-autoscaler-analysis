@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       run: slave-leech-hpa
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -19,7 +19,9 @@ spec:
           - containerPort: 3000
         imagePullPolicy: IfNotPresent
         resources:
-          limits:
-            cpu: 100m
           requests:
-            cpu: 100m
+            cpu: 175m
+            memory: 75Mi
+          limits:
+            cpu: 900m
+            memory: 225Mi
