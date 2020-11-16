@@ -1,22 +1,25 @@
 #!/bin/bash
 
 HOST=$1
-SERVICE_TIME=250
+SERVICE_TIME='busy-wait/175'
 DURATION=2 #5 minutes
 
 LOGS_DIR=logs
 STAGE_DIR=""
 SCENARIO_DIR=""
-SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3)
+SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4)
 
 # Scenario 1
-REQUEST_RATE_S1=(2 4 8 8 4 2)
+REQUEST_RATE_S1=(1 1 2 4 8 4 2 1)
 
 # Scenario 2
-REQUEST_RATE_S2=(1 1 8 8 1 1)
+REQUEST_RATE_S2=(1 1 8 8 8 1 1 1)
 
 # Scenario 3
-REQUEST_RATE_S3=(1 8 1 8 1 8)
+REQUEST_RATE_S3=(1 1 8 8 1 1 8 8)
+
+# Scenario 4
+REQUEST_RATE_S4=(1 1 8 1 8 1 8 1)
 
 
 
@@ -32,7 +35,7 @@ function create_dir(){
 
 function save_logs(){
 
-    for value in {1..30}
+    for value in {1..12}
     do
         (kubectl get pods -o json) > "${SCENARIO_DIR}/${STAGE_DIR}/pods-requests/pod-request-${value}.log"
 
