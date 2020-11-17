@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: busy-wait-hpa
+  labels:
+    run: busy-wait-hpa
+spec:
+  selector:
+    run: busy-wait-hpa
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: NodePort

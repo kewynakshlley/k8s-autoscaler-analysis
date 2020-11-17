@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busy-wait-hpa
+spec:
+  selector:
+    matchLabels:
+      run: busy-wait-hpa
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: busy-wait-hpa
+    spec:
+      containers:
+      - name: busy-wait-hpa
+        image: kewynakshlley/busy-wait-noclustering
+        ports:
+          - containerPort: 3000
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 175m
+            memory: 75Mi
+          limits:
+            cpu: 900m
+            memory: 225Mi

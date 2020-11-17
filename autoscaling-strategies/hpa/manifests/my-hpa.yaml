@@ -1,14 +1,14 @@
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: slave-leech-hpa
+  name: busy-wait-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: slave-leech-hpa
+    name: busy-wait-hpa
   maxReplicas: 10
-  minReplicas: 1
+  minReplicas: 2
   metrics:
   - type: Resource
     resource:
