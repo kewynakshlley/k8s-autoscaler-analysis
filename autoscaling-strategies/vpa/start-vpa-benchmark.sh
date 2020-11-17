@@ -1,25 +1,28 @@
 #!/bin/bash
 
 HOST=$1
-SERVICE_TIME='busy-wait/175'
+SERVICE_TIME='busy-wait/250'
 DURATION=2 #5 minutes
 
 LOGS_DIR=logs
 STAGE_DIR=""
 SCENARIO_DIR=""
-SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4)
+SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4 REQUEST_RATE_S5)
 
 # Scenario 1
-REQUEST_RATE_S1=(1 1 2 4 8 4 2 1)
+REQUEST_RATE_S1=(2 2 4 6 8 6 4 2)
 
 # Scenario 2
-REQUEST_RATE_S2=(1 1 8 8 8 1 1 1)
+REQUEST_RATE_S2=(2 2 4 4 8 8 4 4)
 
 # Scenario 3
-REQUEST_RATE_S3=(1 1 8 8 1 1 8 8)
+REQUEST_RATE_S3=(2 2 8 8 8 2 2 2)
 
 # Scenario 4
-REQUEST_RATE_S4=(1 1 8 1 8 1 8 1)
+REQUEST_RATE_S4=(2 2 8 8 2 2 8 8)
+
+# Scenario 5
+REQUEST_RATE_S5=(2 2 8 2 8 2 8 2)
 
 
 
@@ -27,7 +30,6 @@ function create_dir(){
     if [ ! -d "${1}" ]; then
         mkdir "${1}"
     fi
-    mkdir "${1}/node"
     mkdir "${1}/vpa"
     mkdir "${1}/pods-requests"
     mkdir "${1}/pods-usage"
@@ -40,8 +42,6 @@ function save_logs(){
         (kubectl get pods -o json) > "${SCENARIO_DIR}/${STAGE_DIR}/pods-requests/pod-request-${value}.log"
 
         (kubectl get vpa busy-wait-vpa -o json) > "${SCENARIO_DIR}/${STAGE_DIR}/vpa/vpa-${value}.log"
-
-        (kubectl top nodes) >> "${SCENARIO_DIR}/${STAGE_DIR}/node/node-usage.log"
 
         (kubectl top pods) >> "${SCENARIO_DIR}/${STAGE_DIR}/pods-usage/pods-usage.log"
         sleep 10;
@@ -75,12 +75,15 @@ function start_experiment(){
             STAGE_DIR="stage-${INC}"
             create_dir "${SCENARIO_DIR}/${STAGE_DIR}"
 
+            (kubectl describe nodes minikube) > "${SCENARIO_DIR}/${STAGE_DIR}/node-info.log"
             save_logs &
-            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey=${INC}-$(date +%r).log"
+            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey-info.log"
             INC=$((INC+1))
         done
         printf "\U1F973  Scenario finished. The logs were saved.\n"
         S_AUX=$((S_AUX+1))
+        source restart-vpa.sh
+        sleep 15
     done
     echo "Experiment finished."
 }
