@@ -96,9 +96,12 @@ hpa_response_times <- hpa_hey_files %>%
   mutate(scenario_str = factor(scenario_str),
          scaling = "horizontal")
 
-response_times <- bind_rows(vpa_response_times, hpa_response_times) %>%
+response_times <- bind_rows(vpa_response_times, hpa_response_times)
+
+response_times_summary <- response_times %>%
   group_by(scenario_str, stage, scaling) %>%
-  summarise(response_time_median = median(response_time))
+  summarise(response_time_median = median(response_time),
+            response_time_mean = mean(response_time))
 
 p <- ggplot(response_times, aes(stage, response_time_median, col = scaling,
                                 shape = scaling)) +
@@ -112,3 +115,18 @@ p <- ggplot(response_times, aes(stage, response_time_median, col = scaling,
   theme_bw()
 p
 ggsave(file.path("response_times.png"), p, width = 5, height = 5)
+
+p <- ggplot(response_times, aes(factor(stage), response_time,
+                                col = scaling, shape = scaling)) +
+  geom_hline(aes(yintercept = 0.175), lty = 2) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.8) +
+  geom_point(aes(y = response_time_mean), data = response_times_summary,
+             position = position_dodge(width = 0.75)) +
+  facet_wrap(~ scenario_str, ncol = 1) +
+  scale_y_continuous(limits = c(0.175, 1.225), breaks = seq(0, 1.5, 0.175)) +
+  labs(x = "Stage", y = "Tempo de resposta (segundos)", fill = "n pods") +
+  theme_bw() +
+  theme(panel.spacing = unit(0.1, "lines"))
+p
+ggsave(file.path("response_times_boxplot.png"), p, width = 7, height = 7)
+
