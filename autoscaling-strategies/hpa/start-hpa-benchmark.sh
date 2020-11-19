@@ -1,28 +1,25 @@
 #!/bin/bash
 
 HOST=""
-SERVICE_TIME='/busy-wait/250'
+SERVICE_TIME='/busy-wait/175'
 DURATION=2
 
 LOGS_DIR=logs
 STAGE_DIR=""
 SCENARIO_DIR=""
-SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4 REQUEST_RATE_S5)
+SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4)
 
 # Scenario 1
-REQUEST_RATE_S1=(2 2 4 6 8 6 4 2)
+REQUEST_RATE_S1=(2 2 4 6 8 6 4 2 2)
 
 # Scenario 2
-REQUEST_RATE_S2=(2 2 4 4 8 8 4 4)
+REQUEST_RATE_S2=(2 2 8 8 8 2 2 2 2)
 
 # Scenario 3
-REQUEST_RATE_S3=(2 2 8 8 8 2 2 2)
+REQUEST_RATE_S3=(2 2 8 8 2 2 2 2 2)
 
 # Scenario 4
-REQUEST_RATE_S4=(2 2 8 8 2 2 8 8)
-
-# Scenario 4
-REQUEST_RATE_S5=(2 2 8 2 8 2 8 2)
+REQUEST_RATE_S4=(2 2 8 2 8 2 8 2 2)
 
 function create_dir(){
     if [ ! -d "${1}" ]; then
@@ -58,7 +55,7 @@ function start_experiment(){
         eval SCENARIO_NAME=\( \${${scenario}[@]} \)
         INC=1
 
-        SCENARIO_DIR="scenario-${S_AUX}"
+        SCENARIO_DIR="results/scenario-${S_AUX}"
         mkdir $SCENARIO_DIR
 
         info ${S_AUX}
@@ -69,10 +66,10 @@ function start_experiment(){
             create_dir "${SCENARIO_DIR}/${STAGE_DIR}"
 
             (kubectl describe nodes minikube) > "${SCENARIO_DIR}/${STAGE_DIR}/node-info.log"
-            echo "REQUEST RATE = $REQ_RATE"
+            echo "HEY WORKERS = $REQ_RATE"
             HOST=$(minikube service busy-wait-hpa --url)
             save_logs &
-            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey-info.log"
+            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -o csv -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey-info.csv"
             (kubectl get hpa busy-wait-hpa -o json) > "${SCENARIO_DIR}/${STAGE_DIR}/events/events-info.log"
 
             INC=$((INC+1))
@@ -83,5 +80,5 @@ function start_experiment(){
     done
     echo "Experiment finished."
 }
-
+source restart-hpa.sh
 start_experiment

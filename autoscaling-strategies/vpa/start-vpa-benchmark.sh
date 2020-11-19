@@ -1,28 +1,27 @@
 #!/bin/bash
 
-HOST=$1
-SERVICE_TIME='busy-wait/250'
+
+
+HOST=""
+SERVICE_TIME='/busy-wait/175'
 DURATION=2 #5 minutes
 
 LOGS_DIR=logs
 STAGE_DIR=""
 SCENARIO_DIR=""
-SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4 REQUEST_RATE_S5)
+SCENARIOS=(REQUEST_RATE_S1 REQUEST_RATE_S2 REQUEST_RATE_S3 REQUEST_RATE_S4)
 
 # Scenario 1
-REQUEST_RATE_S1=(2 2 4 6 8 6 4 2)
+REQUEST_RATE_S1=(2 2 4 6 8 6 4 2 2)
 
 # Scenario 2
-REQUEST_RATE_S2=(2 2 4 4 8 8 4 4)
+REQUEST_RATE_S2=(2 2 8 8 8 2 2 2 2)
 
 # Scenario 3
-REQUEST_RATE_S3=(2 2 8 8 8 2 2 2)
+REQUEST_RATE_S3=(2 2 8 8 2 2 2 2 2)
 
 # Scenario 4
-REQUEST_RATE_S4=(2 2 8 8 2 2 8 8)
-
-# Scenario 5
-REQUEST_RATE_S5=(2 2 8 2 8 2 8 2)
+REQUEST_RATE_S4=(2 2 8 2 8 2 8 2 2)
 
 
 
@@ -64,28 +63,30 @@ function start_experiment(){
         eval SCENARIO_NAME=\( \${${scenario}[@]} \)
         INC=1
 
-        SCENARIO_DIR="scenario-${S_AUX}"
+        SCENARIO_DIR="results/scenario-${S_AUX}"
         mkdir $SCENARIO_DIR
 
         info ${S_AUX}
 
         for REQ_RATE in "${SCENARIO_NAME[@]}"
         do
-            echo "RATE LIMIT $REQ_RATE"
+            echo "HEY WORKERS $REQ_RATE"
             STAGE_DIR="stage-${INC}"
             create_dir "${SCENARIO_DIR}/${STAGE_DIR}"
 
             (kubectl describe nodes minikube) > "${SCENARIO_DIR}/${STAGE_DIR}/node-info.log"
+            HOST=$(minikube service busy-wait-vpa --url)
             save_logs &
-            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey-info.log"
+            (hey -disable-keepalive -z ${DURATION}m -c ${REQ_RATE} -q 1 -o csv -m GET -T “application/x-www-form-urlencoded” ${HOST}${SERVICE_TIME}) > "${SCENARIO_DIR}/${STAGE_DIR}/hey-info.csv"
             INC=$((INC+1))
         done
         printf "\U1F973  Scenario finished. The logs were saved.\n"
         S_AUX=$((S_AUX+1))
         source restart-vpa.sh
-        sleep 15
     done
     echo "Experiment finished."
 }
+
+source restart-vpa.sh
 
 start_experiment

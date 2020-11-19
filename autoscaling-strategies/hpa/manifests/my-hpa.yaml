@@ -7,7 +7,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: busy-wait-hpa
-  maxReplicas: 10
+  maxReplicas: 100
   minReplicas: 2
   metrics:
   - type: Resource

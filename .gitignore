@@ -2,3 +2,7 @@
 **/autoscaling-strategies/vpa/autoscaler
 **/autoscaling-strategies/vpa/scenario*
 **/autoscaling-strategies/hpa/scenario*
+*.zip
+**/autoscaling-strategies/hpa/results*
+**/autoscaling-strategies/vpa/results*
+
